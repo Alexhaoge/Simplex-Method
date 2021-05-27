@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 #include "lp.h"
 #include "ssimplex.h"
+using namespace std;
 
 void printMatrix(double** a, int row, int col) {
     printf(">>>>>>>>>>>>>>>>>>>>>>\n");
@@ -17,6 +18,8 @@ int main(){
     double b0[4]={4,2,3,6};
     double A0[4][3]={{1,1,1},{1,0,0},{0,0,1},{0,3,1}};
     double** res;
+    printMatrix(res, 4, 3);
+    flush(cout);
     SimpleLPtoMatrix(res, 3, 4, C0, (double **)A0, b0);
     printMatrix(res, 5, 8);
     return 0;
