@@ -5,26 +5,26 @@
 #include<float.h>
 #include <time.h>
 #define I 3
-#define N 1000
-#define M 1000
+#define N 1024
+#define M 1024
 #define blockx 16
-#define blocky 16
-#define Thread_num 64
+#define blocky 32
+#define Thread_num 512
 #define S 0
 #define E 0
 void generate_matrix(double* matrix,int m,int n)
 {
-    for(int i=0;i<m;i++){
-        for(int j=0;j<n;j++){
-            matrix[i * n + j] =  ((double)((rand()%30)-10));
+    for(int i=1;i<m;i++){
+        for(int j=1;j<n;j++){
+            matrix[i * n + j] =  (((double)rand())/RAND_MAX)*20;
         }
     }
     for(int i=0;i<m;i++){
-        matrix[i*n] =  (double)((rand()%500)+200);
+        matrix[i*n] =  (((double)rand())/RAND_MAX)*200+200*(rand()%3)+200;
     }
-    for(int i=0;i<n/2;i++)
+    for(int i=0;i<n;i++)
     {
-        matrix[i]=-((double)((rand()%300)+1));
+        matrix[i]=-(((double)rand())/RAND_MAX)*200;
     }
 }
 
@@ -40,7 +40,31 @@ void read_matrix(double* matrix,int m,int n)
     }
 
 }
-
+void write_matrix(double* matrix,int m,int n)
+{
+    FILE *fpWriteA=fopen("A.txt","w");
+    FILE *fpWriteb=fopen("b.txt","w");
+    FILE *fpWritec=fopen("c.txt","w");
+    for(int i=1;i<m;i++)
+    {
+        for(int j=1;j<n;j++)
+        {
+            fprintf(fpWriteA," %lf ",matrix[i*N+j]);
+        }
+        fprintf(fpWriteA,"\n");
+    }
+    for(int j=1;j<n;j++)
+    {
+        fprintf(fpWritec,"%lf\n",matrix[j]);
+    }
+    for(int i=1;i<m;i++)
+    {
+        fprintf(fpWriteb,"%lf\n",matrix[i*n]);
+    }
+    fclose (fpWriteA);
+    fclose (fpWriteb);
+    fclose (fpWritec);
+}
 int Find_min(double* array,int length)
 {
     double min=DBL_MAX;
@@ -145,6 +169,7 @@ int main()
     LinerCPU=(double*)malloc(sizeof(double)*N);
     generate_matrix(SimplexTableau,M,N);
     //read_matrix(SimplexTableau,M,N);
+    write_matrix(SimplexTableau,M,N);
     SimplexTableau[0]=DBL_MAX;
     if(S==1){
     printf("\n start \n");
@@ -308,9 +333,12 @@ int main()
     
     if(label){
         printf("\n true \n");
+        FILE *fpWriter=fopen("r.txt","w");
         for(int i=0;i<M-1;i++){
             printf(" the  x_%d is %f \n",i+1,x_result[i]);
+            fprintf(fpWriter,"%lf\n",x_result[i]);
         }
+
     }
     else
     {
