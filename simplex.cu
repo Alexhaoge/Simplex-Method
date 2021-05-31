@@ -4,6 +4,7 @@
 #include<cuda_runtime.h>
 #include<float.h>
 #include <time.h>
+#include <sys/time.h>
 #define I 3
 #define N 1024
 #define M 1024
@@ -12,11 +13,17 @@
 #define Thread_num 512
 #define S 0
 #define E 0
+double cpuSecond() 
+{
+    struct timeval tp;
+    gettimeofday(&tp,NULL);
+    return ((double)tp.tv_sec + (double)tp.tv_usec*1.e-6);
+}
 void generate_matrix(double* matrix,int m,int n)
 {
     for(int i=1;i<m;i++){
         for(int j=1;j<n;j++){
-            matrix[i * n + j] =  (((double)rand())/RAND_MAX)*20;
+            matrix[i * n + j] =  (((double)rand())/RAND_MAX)*200;
         }
     }
     for(int i=0;i<m;i++){
@@ -30,15 +37,29 @@ void generate_matrix(double* matrix,int m,int n)
 
 void read_matrix(double* matrix,int m,int n)
 {
-    FILE *fpRead=fopen("data.txt","r");
-    for(int i=0;i<m;i++)
+   
+    FILE *fpWriteA=fopen("A.txt","r");
+    FILE *fpWriteb=fopen("b.txt","r");
+    FILE *fpWritec=fopen("c.txt","r");
+    for(int i=1;i<m;i++)
     {
-        for(int j=0;j<n;j++)
+        for(int j=1;j<n;j++)
         {
-            fscanf(fpRead,"%lf",matrix+i*N+j);
+            fscanf(fpWriteA," %lf ",matrix+i*N+j);
         }
+        
     }
-
+    for(int j=1;j<n;j++)
+    {
+        fscanf(fpWritec,"%lf",matrix+j);
+    }
+    for(int i=1;i<m;i++)
+    {
+        fscanf(fpWriteb,"%lf",matrix+i*n);
+    }
+    fclose (fpWriteA);
+    fclose (fpWriteb);
+    fclose (fpWritec);
 }
 void write_matrix(double* matrix,int m,int n)
 {
@@ -159,6 +180,9 @@ int main()
     double min,wp;
     int* index,*index1,*Min;
     double* Sharedrow,*SimplexTableau,*SimplexTableauPart,*Columnk,*Liner,*LinerCPU,*theta;
+    double thread_start_time;
+    double thread_run_time;
+    double time;
     m0=(M+I-1)/I;
     n0=(N+I-1)/I;
     Min=(int*)malloc(sizeof(int)*I);
@@ -167,9 +191,9 @@ int main()
     Sharedrow=(double*)malloc(sizeof(double)*I*(n0>m0 ? n0 : m0));
     SimplexTableau=(double*)malloc(sizeof(double)*M*N);
     LinerCPU=(double*)malloc(sizeof(double)*N);
-    generate_matrix(SimplexTableau,M,N);
-    //read_matrix(SimplexTableau,M,N);
-    write_matrix(SimplexTableau,M,N);
+    //generate_matrix(SimplexTableau,M,N);
+    read_matrix(SimplexTableau,M,N);
+    //write_matrix(SimplexTableau,M,N);
     SimplexTableau[0]=DBL_MAX;
     if(S==1){
     printf("\n start \n");
@@ -212,6 +236,7 @@ int main()
         cudaMalloc((void**)&SimplexTableauPart,sizeof(double)*size*N);
         cudaMalloc((void**)&Liner,sizeof(double)*N);
         cudaMemcpy(SimplexTableauPart,SimplexTableau+N*m0*tid,sizeof(double)*size*N,cudaMemcpyHostToDevice);
+        thread_start_time=cpuSecond();
         do
         {
         if(tid==0)
@@ -302,8 +327,11 @@ int main()
             #pragma omp barrier
         }
            
+            
        }while(1);
-       cudaMemcpy(SimplexTableau+N*m0*tid,SimplexTableauPart,sizeof(double)*size*N,cudaMemcpyDeviceToHost);
+       thread_run_time=cpuSecond()-thread_start_time;
+       printf("thread %d run time is %f \n",tid,thread_run_time);
+       //cudaMemcpy(SimplexTableau+N*m0*tid,SimplexTableauPart,sizeof(double)*size*N,cudaMemcpyDeviceToHost);
        cudaFree(SimplexTableauPart);        
     }
     if(E==1)
@@ -332,12 +360,13 @@ int main()
     }
     
     if(label){
-        printf("\n true \n");
-        FILE *fpWriter=fopen("r.txt","w");
-        for(int i=0;i<M-1;i++){
-            printf(" the  x_%d is %f \n",i+1,x_result[i]);
+       printf("\n true \n");
+       FILE *fpWriter=fopen("r.txt","w");
+       for(int i=0;i<M-1;i++){
+            //printf(" the  x_%d is %f \n",i+1,x_result[i]);
             fprintf(fpWriter,"%lf\n",x_result[i]);
         }
+        
 
     }
     else
