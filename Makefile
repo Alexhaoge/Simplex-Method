@@ -101,13 +101,13 @@ EXE := $(addprefix $(DIR_OBJS)/,$(EXE))
 $(EXE):$(OBJS)
 	$(CC) $(INCLUDES) $(OBJS) $(NVCC_LIB) -L $(CUDA_LIB_PATH) -l$(CL_LIBS) $(LDFLAGS) $(EXTRA_LDFLAGS) -o $(EXE)
 
-$(DIR_OBJS)/%.o:%.cpp %.h
+$(DIR_OBJS)/%.o:%.cpp $(HEADERS)
 	$(CC) -c $(CFLAGS) $(INCLUDES) $< -o $@
 
-$(DIR_OBJS)/%.o:%.c %.h
+$(DIR_OBJS)/%.o:%.c $(HEADERS)
 	$(CC) -c $(CFLAGS) $(INCLUDES) $< -o $@
 
-$(DIR_OBJS)/%.o:%.cu %.h
+$(DIR_OBJS)/%.o:%.cu $(HEADERS)
 	$(NVCC) $(NVCCFLAGS) $(EXTRA_NVCCFLAGS) $(NVCC_LIB) $(GENCODE_FLAGS) $(INCLUDES) -c $< -o $@
 
 clean:

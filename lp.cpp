@@ -1,36 +1,30 @@
 #include "lp.h"
+#include <cstdlib> 
 
-void StandardLP::toMatrix(double** &res){
-    res = (double **)malloc(sizeof(double *) * (A.size() + 1));
-    for (int i = 0; i <= A.size(); i++) {
-        res[i] = (double *)malloc(sizeof(double) * (varNum + 1));
-    }
+void StandardLP::toMatrix(double* res){
+    int consNum = A.size();
     for (int i = 0; i < varNum; i++) {
-        res[0][i] = C[i];
-        for (int j = 0; j < A.size(); j++) {
-            res[j + 1][i] = A[j][i];
+        res[i] = C[i];
+        for (int j = 0; j < consNum; j++) {
+            res[(j + 1)*(varNum + 1) + i] = A[j][i];
         }
     }
-    res[0][varNum] = 0;
-    for (int i = 1; i <= A.size(); i++) {
-        res[i][varNum] = b[i];
+    res[varNum] = 0;
+    for (int i = 1; i <= consNum; i++) {
+        res[i * (varNum + 1) + varNum] = b[i];
     }
 }
 
-void StandardLP::toMatrix(double** &res, int varNum, int consNum, double* C, double** A, double* b) {
-    res = (double **)malloc(sizeof(double *) * (consNum + 1));
-    for (int i = 0; i <= consNum; i++) {
-        res[i] = (double *)malloc(sizeof(double) * (varNum + 1));
-    }
+void StandardLP::toMatrix(double* res, int varNum, int consNum, double* C, double* A, double* b) {
     for (int i = 0; i < varNum; i++) {
-        res[0][i] = C[i];
+        res[i] = C[i];
         for (int j = 0; j < consNum; j++) {
-            res[j + 1][i] = A[j][i];
+            res[(j + 1)*(varNum + 1) + i] = A[j * varNum + i];
         }
     }
-    res[0][varNum] = 0;
+    res[varNum] = 0;
     for (int i = 1; i <= consNum; i++) {
-        res[i][varNum] = b[i];
+        res[i * (varNum + 1) + varNum] = b[i];
     }
 }
 
@@ -45,7 +39,7 @@ ostream& StandardLP::operator<<(ostream& out) {
         }
     }
     out << " s.t." << endl;
-    for (int i = 0; i < A.size(); i++) {
+    for (int i = 0, consNum = A.size(); i < consNum; i++) {
         for (int j = 0; j < varNum; j++) {
             if (A[i][j] < 0) {
                 out << "-" << -A[i][j] << "x" << i+1 << "\t";
@@ -60,25 +54,21 @@ ostream& StandardLP::operator<<(ostream& out) {
     return out;
 }
 
-void SimpleLPtoMatrix(double** &res, int varNum, int consNum, double* C, double** A, double* b) {
-    res = (double **)malloc(sizeof(double *) * (consNum + 1));
-    for (int i = 0; i <= consNum; i++) {
-        res[i] = (double *)malloc(sizeof(double) * (varNum + consNum + 1));
-    }
+void SimpleLPtoMatrix(double* res, int varNum, int consNum, double* C, double* A, double* b) {
     for (int i = 0; i < varNum; i++) {
-        res[0][i] = C[i];
+        res[i] = C[i];
         for (int j = 0; j < consNum; j++) {
-            res[j + 1][i] = A[j][i];
+            res[(j + 1)*(varNum + 1) + i] = A[j * varNum + i];
         }
     }
     for (int i = varNum; i <= varNum + consNum; i++) {
-        res[0][i] = 0;
+        res[i] = 0;
         for (int j = 0; j < consNum; j++) {
-            res[j + 1][i] = (j == (i - varNum)) ? 1 : 0;
+            res[(j + 1)*(varNum + 1) + i] = (j == (i - varNum)) ? 1 : 0;
         }
     }
-    res[0][varNum + consNum] = 0;
+    res[varNum + consNum] = 0;
     for (int i = 1; i <= consNum; i++) {
-        res[i][varNum + consNum] = b[i];
+        res[i * (varNum + 1) + varNum + consNum] = b[i];
     }
 }
