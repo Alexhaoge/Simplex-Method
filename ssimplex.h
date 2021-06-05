@@ -13,9 +13,9 @@ public:
     double getAns(std::vector<double> &x);
     void printAns();
     /**默认最后consNum个变量为基变量 */
-    double solve(bool verbose=false);
+    bool solve(bool verbose=false);
 protected:
-    bool pivot(int &in, int &out, int &consID);
+    int pivot(int &in, int &out);
     void Gaussian(int &in, int &out);
 };
 #endif
