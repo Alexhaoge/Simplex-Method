@@ -1,0 +1,7 @@
+.vscode/
+
+build/
+simplex.dev
+simplex.layout
+
+armijo-sd/.ipynb-checkpoints/
