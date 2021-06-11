@@ -1,6 +1,5 @@
 #include <vector>
 #include <map>
-#include <utility>
 #include <iostream>
 using namespace std;
 
@@ -16,6 +15,13 @@ public:
     map<int, double> coef;
     double b;
     ConstrainType type;
+    /***
+     * 必须一行一个约束条件，以'\n'分隔
+     * 未实现对标号的重映射，认为变量个数=最大标号
+     * 所以使用x1和x100两个变量会被认为一共有100个变量
+     */
+    friend istream& operator>>(istream& in, Constraint& cons);
+    friend ostream& operator<<(ostream& out, Constraint& cons);
 };
 
 class GeneralLP {
@@ -24,6 +30,15 @@ public:
     bool isObjMin;
     int varNum;
     map<int, double> C;
+    /***
+     * 1. 目标函数需要以min或者max开头，不要写s.t.，不能有常数
+     * 2. 变量名应形如x1,x2... 以字母x开头后接正整数
+     * 3. 必须一行一个约束条件，以'\n'分隔
+     * 未实现对标号的重映射，认为变量个数=最大标号
+     * 所以使用x1和x100两个变量会被认为一共有100个变量
+     */
+    friend istream& operator>>(istream& in, GeneralLP& glp);
+    friend ostream& operator<<(ostream& out, GeneralLP& glp);
 };
 
 /**
@@ -56,8 +71,17 @@ public:
      */
     static void toMatrix(double* res, int varNum, int consNum, double* C, double* A, double* b);
     
+    double restoreAns(vector<double> &originX, double ans, const vector<double> &standardX);
+
     /* 定义输出*/
-    ostream& operator<<(ostream& out);
+    friend ostream& operator<<(ostream& out, StandardLP& slp);
+
+protected:
+    // TODO: 或许把这里设计成一个adapter类会更好
+    int originVarNum;
+    double cBias;
+    map<int, double> xBias;
+    map<int, int> xPrime;
 };
 
 /**
